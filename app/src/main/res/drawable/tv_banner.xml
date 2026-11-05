@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android TV banner (320x180 dp): same dark background and TV mark as the launcher icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#0B0E14" android:pathData="M0,0h320v180h-320z" />
+    <path android:pathData="M120,50 h80 a5,5 0 0 1 5,5 v50 a5,5 0 0 1 -5,5 h-80 a5,5 0 0 1 -5,-5 v-50 a5,5 0 0 1 5,-5 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="115"
+                android:startY="50"
+                android:endX="205"
+                android:endY="110"
+                android:type="linear">
+                <item android:offset="0" android:color="#007AFF" />
+                <item android:offset="1" android:color="#1890FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M153,115 h14 v10 h-14 z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M142,125 h36 a3,3 0 0 1 3,3 v2 h-42 v-2 a3,3 0 0 1 3,-3 z" android:fillColor="#FFFFFF" />
+</vector>

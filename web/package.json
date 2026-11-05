@@ -1,0 +1,12 @@
+{
+  "name": "deepintv-config-scene",
+  "private": true,
+  "description": "3D scene of the phone settings page. Bundled into app/src/main/res/raw/config_scene.js by `npm run build`.",
+  "scripts": {
+    "build": "esbuild scene.js --bundle --minify --format=esm --target=es2020 --legal-comments=inline --outfile=../app/src/main/res/raw/config_scene.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "three": "0.187.0"
+  }
+}

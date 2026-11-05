@@ -1,0 +1,5 @@
+# Hand-written baseline profile: precompile everything on the launch path (Home, dock, widgets,
+# focus handling). Wildcards keep it valid as classes are added; replace with a generated profile
+# if a baselineprofile module is ever set up.
+HSPLcom/deepintv/launcher/**->**(**)**
+Lcom/deepintv/launcher/**;

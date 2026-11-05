@@ -1,0 +1,17 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+**/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/web/node_modules
+/release/
+# Release signing: the key and its passwords stay on the maintainer's machine.
+keystore.properties
+*.jks
+*.keystore

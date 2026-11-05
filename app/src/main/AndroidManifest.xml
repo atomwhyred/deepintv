@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 11+ (API 30) hides every other app's launch intent unless declared here; without
+         this the app grid comes up empty (AGENTS.md: launcher queries requirement). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- The Home-button helper needs to see which other launchers the TV has. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+        <!-- Voice entry for the weather place, via the TV's own speech recogniser. -->
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+        <!-- The VPN widget lists installed VPN clients: apps that declare a VpnService. -->
+        <intent>
+            <action android:name="android.net.VpnService" />
+        </intent>
+    </queries>
+
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+
+    <!-- Read-only Wi-Fi status for the control center pill/panel. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Normal permission, auto-granted: lets "Autocleanup" kill other apps' background processes. -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <!-- Unlike cleanyourtv's own launcher, DeepinTV is a separate project allowed to use the
+         network: the weather widget (Open-Meteo) needs it. Nothing else calls out, and the
+         weather response is cached for an hour so this is one request every 60 minutes, not
+         polling. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Optional: "use my current location" in the weather widget. Coarse is enough for a city,
+         and the widget falls back to an approximate place from the IP when a TV has no fix. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Optional: read the TV's "continue watching" row for the Continue watching widget. -->
+    <uses-permission android:name="android.permission.READ_TV_LISTINGS" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+
+    <application
+        android:name=".DeepinApp"
+        android:allowBackup="false"
+        android:localeConfig="@xml/locales_config"
+        android:banner="@drawable/tv_banner"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.DeepinTV">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:resizeableActivity="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.DeepinTV">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Opens the TV's own power dialog / lock screen (GLOBAL_ACTION_POWER_DIALOG,
+             GLOBAL_ACTION_LOCK_SCREEN) for the control center's power menu, and later reinterprets
+             remote key events (item 6). Disabled until the person enables it once in
+             Accessibility settings; the control center explains why and links there. -->
+        <service
+            android:name=".service.DeepinAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- "Deepin Ambient Display": the system screensaver, picked once by the person in
+             Ajustes > Pantalla > Protector de pantalla > DeepinTV, like any other dream. -->
+        <!-- Optional: only bound once the person grants notification access in the TV's settings.
+             It feeds the Notifications widget with the title and text of the latest ones. -->
+        <service
+            android:name=".service.DeepinNotificationService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.DeepinDreamService"
+            android:exported="true"
+            android:permission="android.permission.BIND_DREAM_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.dreams.DreamService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

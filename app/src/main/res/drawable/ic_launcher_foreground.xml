@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A stylised TV: screen rectangle with rounded corners, a short stand, clean lines.
+         The screen fill is a linear gradient from Deepin blue to cyan (#007AFF -> #1890FF). -->
+    <path android:pathData="M27,33 h54 a3,3 0 0 1 3,3 v34 a3,3 0 0 1 -3,3 h-54 a3,3 0 0 1 -3,-3 v-34 a3,3 0 0 1 3,-3 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="27"
+                android:startY="33"
+                android:endX="84"
+                android:endY="73"
+                android:type="linear">
+                <item android:offset="0" android:color="#007AFF" />
+                <item android:offset="1" android:color="#1890FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M48,76 h12 v8 h-12 z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M38,84 h32 a2,2 0 0 1 2,2 v2 h-36 v-2 a2,2 0 0 1 2,-2 z"
+        android:fillColor="#FFFFFF" />
+</vector>

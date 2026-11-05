@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320">
+  <defs>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#007AFF"/>
+      <stop offset="1" stop-color="#1890FF"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0A84FF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#0A84FF" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="card"><rect x="0" y="0" width="1280" height="320" rx="28"/></clipPath>
+  </defs>
+  <g clip-path="url(#card)">
+    <rect width="1280" height="320" fill="#F2F4F8"/>
+    <ellipse cx="420" cy="160" rx="360" ry="240" fill="url(#glow)"/>
+    <ellipse cx="1080" cy="20" rx="300" ry="180" fill="url(#glow)" opacity="0.6"/>
+    <!-- glass dock hint -->
+    <rect x="490" y="268" width="300" height="28" rx="14" fill="#FFFFFFB3" stroke="#10141C1F"/>
+    <circle cx="556" cy="282" r="6" fill="#0A84FF"/>
+    <circle cx="604" cy="282" r="6" fill="#10141C1F"/>
+    <circle cx="640" cy="282" r="6" fill="#10141C1F"/>
+    <circle cx="676" cy="282" r="6" fill="#10141C1F"/>
+    <circle cx="724" cy="282" r="6" fill="#10141C1F"/>
+  </g>
+  <rect x="0.5" y="0.5" width="1279" height="319" rx="28" fill="none" stroke="#10141C1F"/>
+  <!-- TV mark (same shape as the launcher icon) -->
+  <g transform="translate(300 62)">
+    <rect x="0" y="0" width="150" height="100" rx="10" fill="url(#screen)"/>
+    <rect x="1" y="1" width="148" height="98" rx="9" fill="none" stroke="#FFFFFF" stroke-opacity="0.18"/>
+    <rect x="61" y="108" width="28" height="18" fill="#10141C"/>
+    <rect x="41" y="126" width="68" height="10" rx="4" fill="#10141C"/>
+  </g>
+  <text x="500" y="140" font-family="-apple-system, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="76" font-weight="600" fill="#10141C" letter-spacing="-1">Deepin<tspan fill="#0A84FF">TV</tspan></text>
+  <text x="503" y="190" font-family="-apple-system, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="28" fill="#5B6577">A Deepin-style launcher for Android TV</text>
+</svg>

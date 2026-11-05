@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>DeepinTV</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --accent: #0081ff;
+    --accent-2: #1890ff;
+    --accent-soft: rgba(0, 129, 255, .14);
+    --ok: #30d158;
+    --err: #ff453a;
+    --text: #1f2329;
+    --sub: #5b6577;
+    --glass: rgba(255, 255, 255, .66);
+    --glass-strong: rgba(255, 255, 255, .82);
+    --line: rgba(0, 0, 0, .08);
+    --edge: rgba(255, 255, 255, .7);
+    --field: rgba(0, 0, 0, .05);
+    --shadow: 0 10px 40px rgba(20, 40, 80, .14);
+    --page: radial-gradient(1200px 800px at 15% 0%, #dbeaff 0%, transparent 60%),
+            radial-gradient(900px 700px at 100% 100%, #f6dccd 0%, transparent 55%), #eef2f8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #f0f2f5;
+      --sub: #9aa3b2;
+      --glass: rgba(24, 28, 38, .58);
+      --glass-strong: rgba(28, 32, 44, .82);
+      --line: rgba(255, 255, 255, .08);
+      --edge: rgba(255, 255, 255, .1);
+      --field: rgba(255, 255, 255, .07);
+      --shadow: 0 10px 40px rgba(0, 0, 0, .45);
+      --page: radial-gradient(1200px 800px at 15% 0%, #12305e 0%, transparent 60%),
+              radial-gradient(900px 700px at 100% 100%, #0d2342 0%, transparent 55%), #070a10;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--page); background-attachment: fixed; min-height: 100%; }
+  body {
+    margin: 0; color: var(--text); min-height: 100vh;
+    font: 15px/1.45 "Noto Sans", "Source Han Sans SC", "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--edge); border-radius: 18px; box-shadow: var(--shadow);
+  }
+
+  /* Top bar */
+  header {
+    position: sticky; top: 0; z-index: 5; margin: 12px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo { width: 38px; height: 38px; flex: none; border-radius: 11px; display: grid; place-items: center;
+    background: linear-gradient(135deg, #0081ff, #35c3ff); box-shadow: 0 4px 14px rgba(0, 129, 255, .45); }
+  .brand { flex: 1; min-width: 0; }
+  .brand b { display: block; font-size: 17px; letter-spacing: .01em; }
+  .brand span { display: block; font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status { display: flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 999px;
+    background: var(--field); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .status i { width: 8px; height: 8px; border-radius: 50%; background: var(--sub); }
+  .status.live i { background: var(--ok); box-shadow: 0 0 0 0 rgba(48, 209, 88, .6); animation: pulse 2s infinite; }
+  .status.dead i { background: var(--err); }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(48, 209, 88, 0); } 100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); } }
+
+  /* Layout */
+  main { max-width: 1180px; margin: 0 auto; padding: 0 12px; display: grid; gap: 14px; }
+  @media (min-width: 900px) {
+    main { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+    .preview { position: sticky; top: 86px; }
+  }
+
+  /* Preview */
+  .preview { padding: 14px; }
+  .preview h2 { margin: 2px 4px 10px; }
+  #tv { position: relative; width: 100%; aspect-ratio: 16 / 10.5; border-radius: 14px; overflow: hidden;
+    touch-action: pan-y; cursor: grab; }
+  #tv canvas { width: 100%; height: 100%; display: block; }
+  #tv canvas.flat { height: auto; border-radius: 10px; margin-top: 6%; }
+  #tv:active { cursor: grabbing; }
+  .hint { margin: 8px 4px 0; font-size: 12px; color: var(--sub); text-align: center; }
+  .has-3d .hint-flat, html:not(.has-3d) .hint-3d { display: none; }
+  .chips-row { display: flex; gap: 8px; margin: 10px 2px 0; flex-wrap: wrap; justify-content: center; }
+  .stat { padding: 5px 10px; border-radius: 999px; background: var(--field); font-size: 12px; color: var(--sub); }
+  .stat b { color: var(--text); font-weight: 600; }
+
+  /* Sections */
+  .stack { display: grid; gap: 14px; }
+  section { padding: 16px; }
+  h2 { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--sub); margin: 0 0 12px; }
+  h2 .ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  h2 .ic svg { width: 16px; height: 16px; }
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+  .field + .field { border-top: 1px solid var(--line); }
+  .field > span { flex: 1; }
+
+  /* Segmented control (Deepin style) */
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 4px; gap: 4px; border-radius: 12px; background: var(--field); }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { text-align: center; padding: 10px 6px; border-radius: 9px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s; }
+  .seg input:checked + label { background: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(0, 129, 255, .35); }
+  .seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .auto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .auto[hidden] { display: none; }
+  .auto label { font-size: 12px; color: var(--sub); display: grid; gap: 6px; }
+
+  input[type=time], select {
+    font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%; appearance: none; -webkit-appearance: none;
+  }
+  select { width: auto; min-width: 112px; padding-right: 34px; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--sub) 50%), linear-gradient(135deg, var(--sub) 50%, transparent 50%);
+    background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+  select option { color: #1f2329; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Sliders */
+  .slider { padding: 8px 0 4px; }
+  .slider .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider output { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent); }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; --p: 50%; }
+  input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent) 0 var(--p), var(--field) var(--p) 100%); }
+  input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--field); }
+  input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%;
+    background: #fff; border: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, .3), 0 0 0 4px var(--accent-soft); }
+  input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .3), 0 0 0 4px var(--accent-soft); }
+
+  /* Widget list */
+  .w { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 4px; border-radius: 12px; transition: background .2s; }
+  .w + .w { border-top: 1px solid var(--line); }
+  .w.on { background: var(--accent-soft); border-top-color: transparent; }
+  .w .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600;
+    background: var(--accent); color: #fff; flex: none; }
+  .w .n.off { background: var(--field); color: var(--sub); }
+  .w span { flex: 1; font-weight: 500; }
+  .mv { width: 40px; height: 40px; border-radius: 10px; border: 0; background: var(--glass-strong); color: var(--text);
+    display: grid; place-items: center; cursor: pointer; }
+  .mv:disabled { opacity: .3; cursor: default; }
+  .mv svg { width: 18px; height: 18px; }
+
+  /* Switch (Deepin style) */
+  .sw { position: relative; width: 46px; height: 28px; flex: none; }
+  .sw input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .sw i { position: absolute; inset: 0; border-radius: 14px; background: var(--field); border: 1px solid var(--line); transition: background .2s; }
+  .sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .3); transition: transform .2s; }
+  .sw input:checked + i { background: var(--accent); border-color: transparent; }
+  .sw input:checked + i::after { transform: translateX(18px); }
+  .sw input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Coin chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip label { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 14px; border-radius: 999px;
+    background: var(--field); border: 1px solid var(--line); font-weight: 600; cursor: pointer; transition: all .2s; }
+  .chip label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sub); opacity: .5; }
+  .chip input:checked + label { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .chip input:checked + label::before { background: var(--accent); opacity: 1; }
+  .chip input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Bottom dock */
+  .dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 6;
+    width: min(680px, calc(100% - 24px)); padding: 10px 10px 10px 18px; display: flex; align-items: center; gap: 12px; border-radius: 22px; }
+  .dock .msg { flex: 1; font-size: 13px; color: var(--sub); min-width: 0; }
+  .dock .msg b { color: var(--text); }
+  .apply { font: inherit; font-weight: 600; border: 0; border-radius: 14px; padding: 14px 22px; min-height: 50px; color: #fff; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 6px 18px rgba(0, 129, 255, .4); white-space: nowrap;
+    transition: transform .15s, opacity .2s; }
+  .apply:active { transform: scale(.97); }
+  .apply:disabled { opacity: .45; box-shadow: none; cursor: default; }
+  .dock.ok .msg { color: var(--ok); }
+  .dock.err .msg { color: var(--err); }
+
+  /* Loading / expired */
+  .skeleton { height: 140px; border-radius: 18px; background: linear-gradient(90deg, var(--field) 0%, var(--glass-strong) 50%, var(--field) 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .notice { padding: 28px 20px; text-align: center; }
+  .notice b { display: block; font-size: 17px; margin-bottom: 6px; }
+  .notice span { color: var(--sub); }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<header class="glass">
+  <div class="logo" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="4" width="19" height="13" rx="2.5" fill="#fff"/><rect x="10" y="17.5" width="4" height="2" fill="#fff"/><rect x="7" y="19.5" width="10" height="1.6" rx=".8" fill="#fff"/></svg>
+  </div>
+  <div class="brand"><b>DeepinTV</b><span id="sub"></span></div>
+  <div class="status" id="status"><i></i><span id="status_t"></span></div>
+</header>
+
+<main>
+  <div class="preview glass">
+    <h2><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6v1.5h3V21H7v-1.5h3V18H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg></span><span id="t_preview"></span></h2>
+    <div id="tv"></div>
+    <p class="hint"><span class="hint-3d" id="hint3d"></span><span class="hint-flat" id="hintflat"></span></p>
+    <div class="chips-row">
+      <span class="stat"><span id="s_theme_l"></span> <b id="s_theme"></b></span>
+      <span class="stat"><span id="s_w_l"></span> <b id="s_w"></b></span>
+      <span class="stat"><span id="s_c_l"></span> <b id="s_c"></b></span>
+    </div>
+  </div>
+
+  <div class="stack" id="loading"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  <div class="glass notice" id="expired" hidden><b id="exp_t"></b><span id="exp_s"></span></div>
+
+  <form class="stack" id="f" hidden>
+    <section class="glass">
+      <h2><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18V3Z"/><path d="M12 3a9 9 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><span id="t_theme"></span></h2>
+      <div class="seg" id="theme" role="radiogroup"></div>
+      <div class="auto" id="autoBox">
+        <label><span id="l_from"></span><input type="time" id="lightFrom"></label>
+        <label><span id="l_to"></span><input type="time" id="lightTo"></label>
+      </div>
+    </section>
+
+    <section class="glass">
+      <h2><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="15" width="20" height="6" rx="3"/><rect x="5" y="16.5" width="3" height="3" rx="1" fill="#fff"/><rect x="10.5" y="16.5" width="3" height="3" rx="1" fill="#fff"/><rect x="16" y="16.5" width="3" height="3" rx="1" fill="#fff"/></svg></span><span id="t_dock"></span></h2>
+      <div class="slider">
+        <div class="top"><span id="l_tr"></span><output id="v_tr"></output></div>
+        <input type="range" id="dockTransparency" min="0" max="100" step="5">
+      </div>
+      <div class="slider">
+        <div class="top"><span id="l_sz"></span><output id="v_sz"></output></div>
+        <input type="range" id="dockSize" step="5">
+      </div>
+    </section>
+
+    <section class="glass">
+      <h2><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2" opacity=".45"/></svg></span><span id="t_widgets"></span></h2>
+      <div id="widgets"></div>
+    </section>
+
+    <section class="glass">
+      <h2><span class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17l5-6 4 3 5-7 4 5v5H3z"/></svg></span><span id="t_coins"></span></h2>
+      <div class="chips" id="coins"></div>
+    </section>
+
+    <section class="glass">
+      <h2><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></span><span id="t_refresh"></span></h2>
+      <div id="refresh"></div>
+    </section>
+  </form>
+</main>
+
+<div class="dock glass" id="dock" hidden>
+  <div class="msg" id="msg"></div>
+  <button class="apply" type="submit" form="f" id="save"></button>
+</div>
+
+<script>
+(function () {
+  var es = (navigator.language || "").toLowerCase().indexOf("es") === 0;
+  document.documentElement.lang = es ? "es" : "en";
+  var T = es ? {
+    sub: "Control remoto de ajustes", loading: "Conectando…", preview: "Vista previa en vivo",
+    hint3d: "Arrastra para girar la TV", hintflat: "Vista previa",
+    theme: "Apariencia", from: "Claro desde", to: "Claro hasta", dock: "Dock", tr: "Transparencia", sz: "Tamaño de iconos",
+    widgets: "Widgets", coins: "Criptomonedas", refresh: "Actualización", save: "Aplicar en la TV",
+    pending: "Cambios sin aplicar", clean: "Ajustes de la TV", ok: "Aplicado. La TV se está actualizando.",
+    bad: "No se pudo aplicar: ", expired: "Sesión caducada", expiredSub: "Vuelve a abrir el código QR en la TV y escanéalo de nuevo.",
+    live: "Conectado", dead: "Caducada", done: "Hecho",
+    DARK: "Oscuro", LIGHT: "Claro", AUTO: "Automático", up: "Subir", down: "Bajar", on: "Mostrar",
+    sTheme: "Tema", sW: "Widgets", sC: "Monedas",
+    refreshWeather: "Clima", refreshCrypto: "Cripto", refreshCalendar: "Calendario", refreshSystem: "Sistema", refreshWatchNext: "Continuar viendo",
+    min: " min", sec: " s"
+  } : {
+    sub: "Remote settings", loading: "Connecting…", preview: "Live preview",
+    hint3d: "Drag to turn the TV", hintflat: "Preview",
+    theme: "Appearance", from: "Light from", to: "Light until", dock: "Dock", tr: "Transparency", sz: "Icon size",
+    widgets: "Widgets", coins: "Cryptocurrencies", refresh: "Refresh", save: "Apply on the TV",
+    pending: "Unapplied changes", clean: "TV settings", ok: "Applied. The TV is updating.",
+    bad: "Could not apply: ", expired: "Session expired", expiredSub: "Open the QR code on the TV again and scan it.",
+    live: "Connected", dead: "Expired", done: "Done",
+    DARK: "Dark", LIGHT: "Light", AUTO: "Automatic", up: "Move up", down: "Move down", on: "Show",
+    sTheme: "Theme", sW: "Widgets", sC: "Coins",
+    refreshWeather: "Weather", refreshCrypto: "Crypto", refreshCalendar: "Calendar", refreshSystem: "System", refreshWatchNext: "Continue watching",
+    min: " min", sec: " s"
+  };
+  var REFRESH = ["refreshWeather", "refreshCrypto", "refreshCalendar", "refreshSystem", "refreshWatchNext"];
+  var ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
+  var ICON_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var data, order = [], labels = {}, deadline = 0, finished = false, timer = 0;
+  function text(id, v) { $(id).textContent = v; }
+  function clock(m) { return ("0" + Math.floor(m / 60)).slice(-2) + ":" + ("0" + (m % 60)).slice(-2); }
+  function minutes(v) { var p = (v || "00:00").split(":"); return (+p[0]) * 60 + (+p[1]); }
+  function el(tag, props) { var e = document.createElement(tag); for (var k in props) e[k] = props[k]; return e; }
+
+  text("sub", T.sub); text("status_t", T.loading); text("t_preview", T.preview);
+  text("hint3d", T.hint3d); text("hintflat", T.hintflat);
+  text("t_theme", T.theme); text("l_from", T.from); text("l_to", T.to);
+  text("t_dock", T.dock); text("l_tr", T.tr); text("l_sz", T.sz); text("t_widgets", T.widgets);
+  text("t_coins", T.coins); text("t_refresh", T.refresh); text("save", T.save);
+  text("s_theme_l", T.sTheme); text("s_w_l", T.sW); text("s_c_l", T.sC);
+  text("exp_t", T.expired); text("exp_s", T.expiredSub);
+
+  function themeValue() { var c = document.querySelector("input[name=theme]:checked"); return c ? c.value : "DARK"; }
+  function coinsValue() {
+    return Array.prototype.filter.call($("coins").querySelectorAll("input"), function (i) { return i.checked; })
+      .map(function (i) { return i.value; });
+  }
+
+  /** Hands the settings being edited to the 3D preview (config_scene.js) and the summary chips. */
+  function publish(dirty) {
+    var theme = themeValue();
+    window.__deepintv = {
+      theme: theme, lightFrom: minutes($("lightFrom").value), lightTo: minutes($("lightTo").value),
+      dockTransparency: +$("dockTransparency").value, dockSize: +$("dockSize").value,
+      widgets: order.slice(), labels: labels
+    };
+    window.dispatchEvent(new CustomEvent("deepintv:state"));
+    $("autoBox").hidden = theme !== "AUTO";
+    text("s_theme", T[theme] || theme); text("s_w", String(order.length)); text("s_c", String(coinsValue().length));
+    if (dirty && !finished) setMsg(T.pending, "");
+  }
+
+  function setMsg(msg, kind) {
+    $("dock").className = "dock glass" + (kind ? " " + kind : "");
+    $("msg").textContent = msg;
+  }
+
+  function fill(range, out, unit) {
+    var p = (range.value - range.min) / (range.max - range.min) * 100;
+    range.style.setProperty("--p", p + "%");
+    out.textContent = range.value + unit;
+  }
+
+  function renderWidgets() {
+    var box = $("widgets"); box.textContent = "";
+    var all = order.concat(data.options.widgets.map(function (w) { return w.name; }).filter(function (n) { return order.indexOf(n) < 0; }));
+    all.forEach(function (name) {
+      var i = order.indexOf(name), on = i >= 0;
+      var row = el("div", { className: "w" + (on ? " on" : "") });
+      row.appendChild(el("div", { className: "n" + (on ? "" : " off"), textContent: on ? String(i + 1) : "–" }));
+      row.appendChild(el("span", { textContent: labels[name] || name }));
+      if (on) {
+        var up = el("button", { type: "button", className: "mv", innerHTML: ICON_UP, title: T.up, disabled: i === 0 });
+        up.setAttribute("aria-label", T.up + " " + (labels[name] || name));
+        up.onclick = function () { order.splice(i - 1, 0, order.splice(i, 1)[0]); renderWidgets(); publish(true); };
+        var dn = el("button", { type: "button", className: "mv", innerHTML: ICON_DOWN, title: T.down, disabled: i === order.length - 1 });
+        dn.setAttribute("aria-label", T.down + " " + (labels[name] || name));
+        dn.onclick = function () { order.splice(i + 1, 0, order.splice(i, 1)[0]); renderWidgets(); publish(true); };
+        row.appendChild(up); row.appendChild(dn);
+      }
+      var sw = el("label", { className: "sw" });
+      var cb = el("input", { type: "checkbox", checked: on });
+      cb.setAttribute("role", "switch");
+      cb.setAttribute("aria-label", T.on + " " + (labels[name] || name));
+      cb.onchange = function () {
+        if (cb.checked) order.push(name); else order.splice(order.indexOf(name), 1);
+        renderWidgets(); publish(true);
+      };
+      sw.appendChild(cb); sw.appendChild(el("i"));
+      row.appendChild(sw);
+      box.appendChild(row);
+    });
+  }
+
+  function expire() {
+    finished = true; clearInterval(timer);
+    $("status").className = "status dead"; text("status_t", T.dead);
+    $("save").disabled = true;
+  }
+
+  function showExpired() {
+    expire();
+    $("loading").hidden = true; $("f").hidden = true; $("dock").hidden = true; $("expired").hidden = false;
+  }
+
+  function tick() {
+    var left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+    if (left <= 0) { showExpired(); return; }
+    text("status_t", T.live + " · " + Math.floor(left / 60) + ":" + ("0" + (left % 60)).slice(-2));
+  }
+
+  fetch("/api/config", { credentials: "same-origin" }).then(function (r) {
+    if (!r.ok) throw new Error("auth");
+    return r.json();
+  }).then(function (d) {
+    data = d; var c = d.config, o = d.options;
+    o.widgets.forEach(function (w) { labels[w.name] = w.label; });
+
+    o.themes.forEach(function (t) {
+      var id = "th_" + t;
+      var input = el("input", { type: "radio", name: "theme", id: id, value: t, checked: c.theme === t });
+      input.onchange = function () { publish(true); };
+      $("theme").appendChild(input);
+      $("theme").appendChild(el("label", { htmlFor: id, textContent: T[t] || t }));
+    });
+    $("lightFrom").value = clock(c.lightFrom); $("lightTo").value = clock(c.lightTo);
+    $("lightFrom").oninput = $("lightTo").oninput = function () { publish(true); };
+
+    var tr = $("dockTransparency"), sz = $("dockSize");
+    tr.value = c.dockTransparency;
+    sz.min = o.dockSize[0]; sz.max = o.dockSize[1]; sz.value = c.dockSize;
+    fill(tr, $("v_tr"), "%"); fill(sz, $("v_sz"), "%");
+    tr.oninput = function () { fill(tr, $("v_tr"), "%"); publish(true); };
+    sz.oninput = function () { fill(sz, $("v_sz"), "%"); publish(true); };
+
+    order = c.widgets.slice(); renderWidgets();
+
+    o.coins.forEach(function (coin) {
+      var wrap = el("div", { className: "chip" });
+      var id = "coin_" + coin.id;
+      var cb = el("input", { type: "checkbox", id: id, value: coin.id, checked: c.coins.indexOf(coin.id) >= 0 });
+      cb.onchange = function () { publish(true); };
+      wrap.appendChild(cb); wrap.appendChild(el("label", { htmlFor: id, textContent: coin.symbol }));
+      $("coins").appendChild(wrap);
+    });
+
+    REFRESH.forEach(function (key) {
+      var unit = key === "refreshSystem" ? T.sec : T.min;
+      var row = el("div", { className: "field" });
+      row.appendChild(el("span", { textContent: T[key] }));
+      var sel = el("select", { id: key });
+      sel.setAttribute("aria-label", T.refresh + ": " + T[key]);
+      o[key].forEach(function (v) { sel.appendChild(el("option", { value: v, textContent: v + unit })); });
+      sel.value = c[key];
+      sel.onchange = function () { publish(true); };
+      row.appendChild(sel); $("refresh").appendChild(row);
+    });
+
+    $("loading").hidden = true; $("f").hidden = false; $("dock").hidden = false;
+    setMsg(T.clean, "");
+    $("status").className = "status live";
+    deadline = Date.now() + (d.expiresInMs || 300000);
+    tick(); timer = setInterval(tick, 1000);
+    publish(false);
+  }).catch(showExpired);
+
+  $("f").onsubmit = function (e) {
+    e.preventDefault();
+    if (finished) return;
+    var body = {
+      theme: themeValue(), lightFrom: minutes($("lightFrom").value), lightTo: minutes($("lightTo").value),
+      dockTransparency: +$("dockTransparency").value, dockSize: +$("dockSize").value,
+      widgets: order, coins: coinsValue()
+    };
+    REFRESH.forEach(function (k) { body[k] = +$(k).value; });
+    $("save").disabled = true;
+    fetch("/api/config", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-Requested-With": "deepintv" },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); }).then(function (x) {
+      if (x.ok) {
+        // The TV closes the server after one change: this page is done.
+        finished = true; clearInterval(timer);
+        $("status").className = "status"; text("status_t", T.done);
+        setMsg(T.ok, "ok");
+      } else {
+        $("save").disabled = false;
+        setMsg(T.bad + (x.j.error || ""), "err");
+      }
+    }).catch(function () { showExpired(); });
+  };
+})();
+</script>
+<script type="module" src="/static/scene.js"></script>
+</body>
+</html>
