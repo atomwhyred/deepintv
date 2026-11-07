@@ -121,6 +121,8 @@
     <string name="icon_size">Dimensione icone</string>
     <string name="home_override">Il tasto Home apre DeepinTV</string>
     <string name="home_on_sleep">Torna alla Home allo spegnimento dello schermo</string>
+    <string name="volume_ramp">Rampa volume propria (solo con tasti rimappati)</string>
+    <string name="filter_off_standby">Rilascia i tasti del telecomando in standby</string>
     <string name="section_refresh">Aggiornamento</string>
     <string name="refresh_every_min">Ogni %d min</string>
     <string name="refresh_every_hour">Ogni %d h</string>

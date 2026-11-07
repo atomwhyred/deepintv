@@ -121,6 +121,8 @@
     <string name="icon_size">图标大小</string>
     <string name="home_override">主页键打开 DeepinTV</string>
     <string name="home_on_sleep">屏幕关闭时返回主页</string>
+    <string name="volume_ramp">自带音量连续调节(仅重映射按键时)</string>
+    <string name="filter_off_standby">待机时释放遥控按键</string>
     <string name="section_refresh">刷新</string>
     <string name="refresh_every_min">每 %d 分钟</string>
     <string name="refresh_every_hour">每 %d 小时</string>

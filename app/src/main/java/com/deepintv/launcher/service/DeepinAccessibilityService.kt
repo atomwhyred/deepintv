@@ -41,16 +41,11 @@ class DeepinAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        // Some OEM builds only honour flagRequestFilterKeyEvents from the XML config when it's
-        // also set here at runtime; without this, onKeyEvent below is never called.
-        serviceInfo = serviceInfo?.apply {
-            flags = flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
-        }
         remapRepository = KeyRemapRepository(this)
         settingsRepository = LauncherSettingsRepository(this)
         refreshMappings()
         armSleepTimer()
-        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF).apply { addAction(Intent.ACTION_SCREEN_ON) })
         // Booting: the TV opens its own launcher first and a window event for it may already have
         // gone by when this service binds, so bring DeepinTV up once if the TV has only just started.
         if (settingsRepository.homeOverride() && SystemClock.elapsedRealtime() < BOOT_WINDOW_MS) {
@@ -68,6 +63,13 @@ class DeepinAccessibilityService : AccessibilityService() {
 
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == Intent.ACTION_SCREEN_ON) {
+                standby = false
+                updateKeyFilter()
+                return
+            }
+            standby = true
+            updateKeyFilter()
             if (settingsRepository.homeOnScreenOff()) performGlobalAction(GLOBAL_ACTION_HOME)
         }
     }
@@ -126,6 +128,48 @@ class DeepinAccessibilityService : AccessibilityService() {
 
     fun refreshMappings() {
         mappings = remapRepository.all()
+        updateKeyFilter()
+    }
+
+    /** Key filtering is only switched on while a remap, the learn mode or the volume ramp needs
+     * it: while it is on, the firmware drops auto-repeat of every key (a held volume button
+     * stops ramping). Set at runtime, so it is not in the XML config. */
+    fun updateKeyFilter() {
+        val info = serviceInfo ?: return
+        val on = !(standby && settingsRepository.filterOffInStandby()) &&
+            KeyFilterPolicy.shouldFilter(mappings.isNotEmpty(), learnModeCallback != null, settingsRepository.consumeVolumeKeys())
+        val flag = android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        val newFlags = if (on) info.flags or flag else info.flags and flag.inv()
+        if (newFlags != info.flags) {
+            info.flags = newFlags
+            serviceInfo = info
+        }
+    }
+
+    private var standby = false
+
+    private var volumeRepeat: Runnable? = null
+
+    /** Own volume ramp for when filtering is on and the firmware no longer repeats the key. */
+    private fun handleVolume(event: KeyEvent): Boolean {
+        val dir = if (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP) android.media.AudioManager.ADJUST_RAISE else android.media.AudioManager.ADJUST_LOWER
+        val audio = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        if (event.action == KeyEvent.ACTION_UP) {
+            volumeRepeat?.let { handler.removeCallbacks(it) }
+            volumeRepeat = null
+            return true
+        }
+        if (event.repeatCount > 0 || volumeRepeat != null) return true
+        audio.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, dir, android.media.AudioManager.FLAG_SHOW_UI)
+        val r = object : Runnable {
+            override fun run() {
+                audio.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, dir, android.media.AudioManager.FLAG_SHOW_UI)
+                handler.postDelayed(this, VOLUME_REPEAT_MS)
+            }
+        }
+        volumeRepeat = r
+        handler.postDelayed(r, VOLUME_REPEAT_DELAY_MS)
+        return true
     }
 
     /** Key codes whose press this service took, so the matching key-up and any auto-repeat are
@@ -135,6 +179,11 @@ class DeepinAccessibilityService : AccessibilityService() {
 
     override fun onKeyEvent(event: KeyEvent): Boolean {
         val code = event.keyCode
+        if ((code == KeyEvent.KEYCODE_VOLUME_UP || code == KeyEvent.KEYCODE_VOLUME_DOWN) &&
+            learnModeCallback == null && code !in mappings && settingsRepository.consumeVolumeKeys()
+        ) return handleVolume(event)
+        // Keys nobody here asked for go straight through.
+        if (code !in mappings && code !in consumedKeys && learnModeCallback == null) return false
         if (event.action == KeyEvent.ACTION_UP) {
             return consumedKeys.remove(code) || super.onKeyEvent(event)
         }
@@ -143,6 +192,7 @@ class DeepinAccessibilityService : AccessibilityService() {
         if (event.repeatCount > 0) return code in consumedKeys || super.onKeyEvent(event)
 
         val learn = learnModeCallback
+        if (learn != null && KeyFilterPolicy.isSystemKey(code)) return false
         if (learn != null) {
             learnModeCallback = null
             consumedKeys.add(code)
@@ -181,7 +231,7 @@ class DeepinAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private val sleepPrefs by lazy { getSharedPreferences("deepintv_sleep", MODE_PRIVATE) }
     private val warnTask = Runnable {
-        android.widget.Toast.makeText(this, R.string.sleep_warning, android.widget.Toast.LENGTH_LONG).show()
+        com.deepintv.launcher.ui.components.showGlassToast(this, R.string.sleep_warning, long = true)
     }
     private val sleepTask = Runnable {
         sleepPrefs.edit().remove(KEY_SLEEP_DEADLINE).apply()
@@ -222,6 +272,8 @@ class DeepinAccessibilityService : AccessibilityService() {
         private const val HOME_CACHE_MS = 60_000L
         private const val BOOT_WINDOW_MS = 3 * 60 * 1000L
         private const val BOOT_OPEN_DELAY_MS = 1500L
+        private const val VOLUME_REPEAT_DELAY_MS = 500L
+        private const val VOLUME_REPEAT_MS = 60L
 
         var instance: DeepinAccessibilityService? = null
             private set
@@ -231,6 +283,10 @@ class DeepinAccessibilityService : AccessibilityService() {
         /** Set while the remap picker is waiting for the next physical key press; cleared after
          * one capture (or when the picker closes). */
         var learnModeCallback: ((Int) -> Unit)? = null
+            set(value) {
+                field = value
+                instance?.updateKeyFilter()
+            }
 
         /** Set by Home while it's on screen, so a remapped button can open an overlay that only
          * Compose (not this service) knows how to draw. */

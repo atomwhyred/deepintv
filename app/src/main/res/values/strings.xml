@@ -122,6 +122,8 @@
     <string name="icon_size">Tamaño de iconos</string>
     <string name="home_override">Botón Home abre DeepinTV</string>
     <string name="home_on_sleep">Ir a Home al apagar la pantalla</string>
+    <string name="volume_ramp">Rampa de volumen propia (solo con remapeos)</string>
+    <string name="filter_off_standby">Soltar teclas del mando en standby</string>
     <string name="section_refresh">Actualización</string>
     <string name="refresh_every_min">Cada %d min</string>
     <string name="refresh_every_hour">Cada %d h</string>

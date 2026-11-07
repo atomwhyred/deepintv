@@ -121,6 +121,8 @@
     <string name="icon_size">アイコンのサイズ</string>
     <string name="home_override">ホームボタンで DeepinTV を開く</string>
     <string name="home_on_sleep">画面オフ時にホームへ戻る</string>
+    <string name="volume_ramp">独自の音量ランプ(キー割り当て時のみ)</string>
+    <string name="filter_off_standby">スタンバイ中はキー監視を停止</string>
     <string name="section_refresh">更新間隔</string>
     <string name="refresh_every_min">%d 分ごと</string>
     <string name="refresh_every_hour">%d 時間ごと</string>

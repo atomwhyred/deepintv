@@ -138,7 +138,7 @@ fun HomeScreen(appRepository: AppRepository) {
     val safeMode = remember { safeModeRepository.isActive() }
     val enabledWidgets = if (safeMode) chosenWidgets.filter { it == WidgetKind.SYSTEM } else chosenWidgets
     LaunchedEffect(Unit) {
-        if (safeMode) android.widget.Toast.makeText(context, R.string.safe_mode_active, android.widget.Toast.LENGTH_LONG).show()
+        if (safeMode) com.deepintv.launcher.ui.components.showGlassToast(context, R.string.safe_mode_active, long = true)
         delay(SafeModeRepository.HEALTHY_AFTER_MS)
         safeModeRepository.markHealthy()
     }
@@ -272,7 +272,7 @@ fun HomeScreen(appRepository: AppRepository) {
                     onPowerClick = {
                         val service = DeepinAccessibilityService.instance
                         if (service != null) service.openPowerDialog()
-                        else android.widget.Toast.makeText(context, R.string.cc_needs_accessibility, android.widget.Toast.LENGTH_LONG).show()
+                        else com.deepintv.launcher.ui.components.showGlassToast(context, R.string.cc_needs_accessibility, long = true)
                     },
                     onWidgetsClick = {
                         returnFocus = widgetsPillRequester
@@ -511,5 +511,6 @@ fun HomeScreen(appRepository: AppRepository) {
                 )
             }
         }
+        com.deepintv.launcher.ui.components.GlassToastHost()
     }
 }

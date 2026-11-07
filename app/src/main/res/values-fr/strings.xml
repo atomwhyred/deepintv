@@ -121,6 +121,8 @@
     <string name="icon_size">Taille des icônes</string>
     <string name="home_override">Le bouton Accueil ouvre DeepinTV</string>
     <string name="home_on_sleep">Retourner à l\'accueil à l\'extinction de l\'écran</string>
+    <string name="volume_ramp">Rampe de volume propre (touches remappées)</string>
+    <string name="filter_off_standby">Libérer les touches en veille</string>
     <string name="section_refresh">Actualisation</string>
     <string name="refresh_every_min">Toutes les %d min</string>
     <string name="refresh_every_hour">Toutes les %d h</string>

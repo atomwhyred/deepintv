@@ -32,6 +32,20 @@ class LauncherSettingsRepository(context: Context) {
         prefs.edit().putBoolean(KEY_HOME_ON_SCREEN_OFF, value).apply()
     }
 
+    /** Own volume ramp for held Vol+/-; only needed (and only costs anything) when key filtering
+     * is on, since filtering makes some TV firmwares drop the key's auto-repeat. */
+    fun consumeVolumeKeys(): Boolean = prefs.getBoolean(KEY_CONSUME_VOLUME, false)
+    fun setConsumeVolumeKeys(value: Boolean) {
+        prefs.edit().putBoolean(KEY_CONSUME_VOLUME, value).apply()
+    }
+
+    /** Whether key filtering is switched off while the screen is off: on some TVs a bound key
+     * filter stops the power button from waking the set. Off by default. */
+    fun filterOffInStandby(): Boolean = prefs.getBoolean(KEY_FILTER_OFF_STANDBY, false)
+    fun setFilterOffInStandby(value: Boolean) {
+        prefs.edit().putBoolean(KEY_FILTER_OFF_STANDBY, value).apply()
+    }
+
     fun themeMode(): ThemeMode = runCatching { ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "") }.getOrDefault(ThemeMode.DARK)
     fun setThemeMode(value: ThemeMode) {
         prefs.edit().putString(KEY_THEME, value.name).apply()
@@ -50,6 +64,8 @@ class LauncherSettingsRepository(context: Context) {
         private const val KEY_LIGHT_TO = "light_to"
         const val DEFAULT_LIGHT_FROM = 7 * 60
         const val DEFAULT_LIGHT_TO = 20 * 60
+        private const val KEY_FILTER_OFF_STANDBY = "filter_off_standby"
+        private const val KEY_CONSUME_VOLUME = "consume_volume_keys"
         private const val KEY_HOME_OVERRIDE = "home_override"
         private const val KEY_HOME_ON_SCREEN_OFF = "home_on_screen_off"
         private const val KEY_TRANSPARENCY = "dock_transparency"

@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="../../releases"><img src="https://img.shields.io/badge/release-v0.5-0A84FF?style=flat-square&labelColor=0B0E14" alt="Release v0.5"></a>
+  <a href="../../releases"><img src="https://img.shields.io/badge/release-v0.6-0A84FF?style=flat-square&labelColor=0B0E14" alt="Release v0.6"></a>
   <img src="https://img.shields.io/badge/Android%20TV-8.0%2B-0A84FF?style=flat-square&labelColor=0B0E14" alt="Android TV 8.0+">
   <img src="https://img.shields.io/badge/Kotlin-Compose%20for%20TV-0A84FF?style=flat-square&labelColor=0B0E14" alt="Kotlin, Compose for TV">
   <img src="https://img.shields.io/badge/APK-2.1%20MB-0A84FF?style=flat-square&labelColor=0B0E14" alt="APK 2,1 MB">
@@ -58,13 +58,13 @@
 Necesitas una Android TV / Google TV con **Android 8.0 o superior** y la **depuración por red (ADB)** activada en las
 opciones de desarrollador. No se modifica nada fuera de la app.
 
-**1 ·** Descarga `DeepinTV-v0.5.apk` desde [**Releases**](../../releases).
+**1 ·** Descarga `DeepinTV-v0.6.apk` desde [**Releases**](../../releases).
 
 **2 ·** Instálalo y precompílalo (sin la última línea la TV lo ejecuta interpretado un buen rato y se nota lento):
 
 ```sh
 adb connect <ip-de-la-tv>:5555
-adb -s <ip-de-la-tv>:5555 install -r DeepinTV-v0.5.apk
+adb -s <ip-de-la-tv>:5555 install -r DeepinTV-v0.6.apk
 adb -s <ip-de-la-tv>:5555 shell cmd package compile -m speed-profile -f com.deepintv.launcher
 ```
 
@@ -75,7 +75,7 @@ adb shell cmd package set-home-activity com.deepintv.launcher/.MainActivity
 ```
 
 > [!NOTE]
-> **v0.5 — temprano y probado en una sola TV** (TCL Smart TV Pro G10, Android 12, 1,8 GB de RAM).
+> **v0.6 — temprano y probado en una sola TV** (TCL Smart TV Pro G10, Android 12, 1,8 GB de RAM).
 > Si lo pruebas en otro televisor, cuéntame qué falla con la
 > [plantilla de incidencia](../../issues/new/choose): modelo de TV, versión de Android, RAM y qué pasó.
 
@@ -117,6 +117,7 @@ brillo y tipografía son fijos).
 | 2 – Robustez | Wi-Fi y volumen en vivo, lista de apps que sigue instalaciones y desinstalaciones, reintentos con espera y avisos de "datos antiguos" en widgets de red, modo seguro tras 3 caídas en 5 minutos, remapeo de teclas que absorbe el soltar/repetir, iconos de clima vectoriales (la TCL G10 no tiene fuente de emojis), tests unitarios. |
 | 3 – Funciones | Búsqueda de apps, recientes, entradas HDMI más ricas, Continuar viendo, Notificaciones y configuración desde el móvil por QR. |
 | 4 – Pulido | Banner de TV, "ir a Inicio al apagar la pantalla" opcional, texto negro en el buscador, panel 3D para el móvil. |
+| 5 – Teclas del mando (v0.6) | El filtro de teclas solo está activo mientras un botón remapeado lo necesita, así que el volumen mantenido vuelve a repetir; rampa de volumen propia opcional; canal ± ignorado en Inicio; avisos con estilo cristal. |
 
 Por el camino aparecieron y se corrigieron fallos propios de la TV con teclas reales (el foco del mando escapando del
 cajón, el tiempo de la pulsación larga, el teclado de la TV que se comía el botón Atrás). 68 tests unitarios se

@@ -121,6 +121,8 @@
     <string name="icon_size">Icon size</string>
     <string name="home_override">Home button opens DeepinTV</string>
     <string name="home_on_sleep">Go to Home when the screen turns off</string>
+    <string name="volume_ramp">Own volume ramp (only with remapped keys)</string>
+    <string name="filter_off_standby">Release remote keys in standby</string>
     <string name="section_refresh">Refresh</string>
     <string name="refresh_every_min">Every %d min</string>
     <string name="refresh_every_hour">Every %d h</string>

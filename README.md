@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="../../releases"><img src="https://img.shields.io/badge/release-v0.5-0A84FF?style=flat-square&labelColor=0B0E14" alt="Release v0.5"></a>
+  <a href="../../releases"><img src="https://img.shields.io/badge/release-v0.6-0A84FF?style=flat-square&labelColor=0B0E14" alt="Release v0.6"></a>
   <img src="https://img.shields.io/badge/Android%20TV-8.0%2B-0A84FF?style=flat-square&labelColor=0B0E14" alt="Android TV 8.0+">
   <img src="https://img.shields.io/badge/Kotlin-Compose%20for%20TV-0A84FF?style=flat-square&labelColor=0B0E14" alt="Kotlin, Compose for TV">
   <img src="https://img.shields.io/badge/APK-2.1%20MB-0A84FF?style=flat-square&labelColor=0B0E14" alt="APK 2.1 MB">
@@ -58,13 +58,13 @@
 You need an Android TV / Google TV with **Android 8.0+** and **network debugging (ADB)** enabled in developer
 options. Nothing outside the app is changed.
 
-**1 ·** Download `DeepinTV-v0.5.apk` from [**Releases**](../../releases).
+**1 ·** Download `DeepinTV-v0.6.apk` from [**Releases**](../../releases).
 
 **2 ·** Install and precompile it (without the last line the TV runs it interpreted for a while and it feels slow):
 
 ```sh
 adb connect <tv-ip>:5555
-adb -s <tv-ip>:5555 install -r DeepinTV-v0.5.apk
+adb -s <tv-ip>:5555 install -r DeepinTV-v0.6.apk
 adb -s <tv-ip>:5555 shell cmd package compile -m speed-profile -f com.deepintv.launcher
 ```
 
@@ -75,7 +75,7 @@ adb shell cmd package set-home-activity com.deepintv.launcher/.MainActivity
 ```
 
 > [!NOTE]
-> **v0.5 — early, and tested on one TV only** (TCL Smart TV Pro G10, Android 12, 1.8 GB RAM).
+> **v0.6 — early, and tested on one TV only** (TCL Smart TV Pro G10, Android 12, 1.8 GB RAM).
 > If you try it on another set, please tell me what breaks with the
 > [bug report template](../../issues/new/choose): TV model, Android version, RAM and what happened.
 
@@ -116,6 +116,7 @@ and typography are fixed).
 | 2 – Robustness | Live Wi-Fi and volume, app list that follows installs/uninstalls, retries with back-off and "old data" notes for network widgets, safe mode after 3 crashes in 5 minutes, key remap that swallows key-up/repeat, vector weather icons (the TCL G10 has no emoji font), unit tests. |
 | 3 – Features | App search, recent apps, richer HDMI inputs, Continue watching, Notifications, configuration from the phone by QR. |
 | 4 – Polish | TV banner, optional "go to Home on screen off", black text in the search field, the 3D phone dashboard. |
+| 5 – Remote keys (v0.6) | The key filter is only on while a remapped key needs it, so a held volume button repeats again; optional own volume ramp; Channel ± ignored on Home; glass-style toasts. |
 
 Along the way several TV-specific bugs were found and fixed with real key events (D-pad focus escaping the drawer,
 long-press timing, the TV's keyboard swallowing Back). 68 unit tests run on the plain JVM.

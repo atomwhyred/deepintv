@@ -134,6 +134,8 @@ fun ControlCenterPanel(
     var dockSize by remember { mutableIntStateOf(settingsRepository.dockSizePercent()) }
     var cleanupMessage by remember { mutableStateOf<String?>(null) }
     var homeOverride by remember { mutableStateOf(settingsRepository.homeOverride()) }
+    var consumeVolume by remember { mutableStateOf(settingsRepository.consumeVolumeKeys()) }
+    var filterOffStandby by remember { mutableStateOf(settingsRepository.filterOffInStandby()) }
     var homeOnScreenOff by remember { mutableStateOf(settingsRepository.homeOnScreenOff()) }
     val refreshRepository = remember { RefreshPrefsRepository(context) }
     val backupRepository = remember { BackupRepository(context) }
@@ -286,7 +288,27 @@ fun ControlCenterPanel(
                         settingsRepository.setHomeOnScreenOff(homeOnScreenOff)
                     },
                 )
-                if ((homeOverride || homeOnScreenOff) && !DeepinAccessibilityService.isEnabled) {
+                SettingsRow(
+                    text = stringResource(R.string.volume_ramp),
+                    value = stringResource(if (consumeVolume) R.string.on else R.string.off),
+                    modifier = Modifier.padding(top = 6.dp),
+                    onClick = {
+                        consumeVolume = !consumeVolume
+                        settingsRepository.setConsumeVolumeKeys(consumeVolume)
+                        DeepinAccessibilityService.instance?.updateKeyFilter()
+                    },
+                )
+                SettingsRow(
+                    text = stringResource(R.string.filter_off_standby),
+                    value = stringResource(if (filterOffStandby) R.string.on else R.string.off),
+                    modifier = Modifier.padding(top = 6.dp),
+                    onClick = {
+                        filterOffStandby = !filterOffStandby
+                        settingsRepository.setFilterOffInStandby(filterOffStandby)
+                        DeepinAccessibilityService.instance?.updateKeyFilter()
+                    },
+                )
+                if ((homeOverride || homeOnScreenOff || consumeVolume) && !DeepinAccessibilityService.isEnabled) {
                     SettingsRow(
                         text = stringResource(R.string.cc_needs_accessibility),
                         small = true,
